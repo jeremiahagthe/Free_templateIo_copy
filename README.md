@@ -208,6 +208,8 @@ The API automatically applies professional text styling:
 - **Effects:** White text with dark stroke + shadow for readability
 - **Responsive:** Font sizes scale with image dimensions
 - **Safe Area:** Text limited to 20% of image area
+- **Font Selection:** Choose from popular fonts (Arial, Helvetica, Impact, Futura, Georgia, Times, etc.)
+- **⚠️ Font Limitation:** Only system fonts (Arial, Helvetica, Impact, Futura, Georgia, Times) work reliably in serverless environments. Google Fonts (Roboto, Montserrat, Bebas Neue, Open Sans) will fall back to Arial unless fonts are embedded as base64 data URIs.
 
 ## 📤 Google Drive Upload (Optional)
 

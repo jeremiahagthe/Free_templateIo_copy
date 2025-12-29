@@ -428,6 +428,26 @@
                             <textarea class="slide-subtitle" rows="2" placeholder="Enter slide subtitle (20-30 words)..." oninput="clearPreview(${slideCount})">${subtitle}</textarea>
                         </div>
                         <div class="form-group">
+                            <label>Font Family</label>
+                            <select class="slide-font" style="width: 100%; padding: 12px; border: 2px solid #e0e0e0; border-radius: 8px; font-size: 16px; background: white;" onchange="clearPreview(${slideCount})">
+                                <option value="Arial">Arial (Default)</option>
+                                <option value="Helvetica">Helvetica</option>
+                                <option value="Impact">Impact ⭐</option>
+                                <option value="Futura">Futura</option>
+                                <option value="Georgia">Georgia</option>
+                                <option value="Times">Times New Roman</option>
+                                <option value="Roboto">Roboto</option>
+                                <option value="Open Sans">Open Sans</option>
+                                <option value="Montserrat">Montserrat</option>
+                                <option value="Bebas Neue">Bebas Neue ⭐</option>
+                            </select>
+                            <div style="background: #fff3cd; border-left: 4px solid #ffc107; padding: 10px; margin-top: 8px; border-radius: 4px;">
+                                <small style="color: #856404; display: block; line-height: 1.4;">
+                                    <strong>⚠️ Font Note:</strong> Only system fonts (Arial, Helvetica, Impact, Futura, Georgia, Times) work reliably. Google Fonts (Roboto, Montserrat, Bebas Neue, Open Sans) will fall back to Arial unless fonts are embedded.
+                                </small>
+                            </div>
+                        </div>
+                        <div class="form-group">
                             <label>Text Color</label>
                             <div class="color-input-group">
                                 <input type="color" class="slide-color" value="${textColor}" onchange="clearPreview(${slideCount})">
@@ -478,7 +498,8 @@
                 slides.push({
                     title: slideDiv.querySelector('.slide-title').value,
                     subtitle: slideDiv.querySelector('.slide-subtitle').value,
-                    textColor: slideDiv.querySelector('.slide-color').value
+                    textColor: slideDiv.querySelector('.slide-color').value,
+                    fontFamily: slideDiv.querySelector('.slide-font')?.value || 'Arial'
                 });
             });
             return slides;
@@ -533,7 +554,10 @@
                     },
                     body: JSON.stringify({
                         backgrounds,
-                        slides,
+                        slides: slides.map(slide => ({
+                            ...slide,
+                            fontFamily: slide.fontFamily || 'Arial'
+                        })),
                         width,
                         height
                     })
@@ -647,6 +671,7 @@
             const title = slideDiv.querySelector('.slide-title').value || '';
             const subtitle = slideDiv.querySelector('.slide-subtitle').value || '';
             const textColor = slideDiv.querySelector('.slide-color').value;
+            const fontFamily = slideDiv.querySelector('.slide-font')?.value || 'Arial';
 
             // Get background URL - find which slide index this is
             const backgroundsText = document.getElementById('backgrounds').value.trim();
@@ -685,7 +710,8 @@
                         slides: [{
                             title: title,
                             subtitle: subtitle,
-                            textColor: textColor
+                            textColor: textColor,
+                            fontFamily: fontFamily
                         }],
                         width: width,
                         height: height
