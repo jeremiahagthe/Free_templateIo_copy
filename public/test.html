@@ -1,0 +1,294 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>API Test - Carousel Generator</title>
+    <style>
+        body {
+            font-family: monospace;
+            max-width: 1200px;
+            margin: 20px auto;
+            padding: 20px;
+            background: #1e1e1e;
+            color: #d4d4d4;
+        }
+        h1 {
+            color: #4ec9b0;
+        }
+        .test-section {
+            background: #252526;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 8px;
+            border: 1px solid #3c3c3c;
+        }
+        button {
+            background: #0e639c;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            cursor: pointer;
+            border-radius: 4px;
+            font-size: 14px;
+            margin: 5px;
+        }
+        button:hover {
+            background: #1177bb;
+        }
+        button:disabled {
+            background: #555;
+            cursor: not-allowed;
+        }
+        pre {
+            background: #1e1e1e;
+            padding: 15px;
+            border-radius: 4px;
+            overflow-x: auto;
+            border: 1px solid #3c3c3c;
+        }
+        .success {
+            color: #4ec9b0;
+        }
+        .error {
+            color: #f48771;
+        }
+        .info {
+            color: #4fc1ff;
+        }
+        input, textarea {
+            width: 100%;
+            padding: 8px;
+            margin: 5px 0;
+            background: #3c3c3c;
+            border: 1px solid #555;
+            color: #d4d4d4;
+            border-radius: 4px;
+            font-family: monospace;
+        }
+        label {
+            color: #4ec9b0;
+            display: block;
+            margin-top: 10px;
+        }
+        .preview {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+            gap: 10px;
+            margin-top: 20px;
+        }
+        .preview img {
+            width: 100%;
+            border-radius: 4px;
+            border: 1px solid #3c3c3c;
+        }
+    </style>
+</head>
+<body>
+    <h1>🧪 Carousel Generator API Test</h1>
+    <p class="info">Test the carousel generation API with various configurations</p>
+
+    <div class="test-section">
+        <h2>Quick Test</h2>
+        <p>Run pre-configured tests to verify API functionality</p>
+        <button onclick="runTest1()">Test 1: Basic Carousel (2 slides)</button>
+        <button onclick="runTest2()">Test 2: Different Dimensions</button>
+        <button onclick="runTest3()">Test 3: Custom Colors</button>
+        <button onclick="clearResults()">Clear Results</button>
+    </div>
+
+    <div class="test-section">
+        <h2>Custom Test</h2>
+        <label>API Endpoint:</label>
+        <input type="text" id="apiEndpoint" value="/.netlify/functions/carousel">
+
+        <label>Request Body (JSON):</label>
+        <textarea id="requestBody" rows="20">{
+  "backgrounds": [
+    "https://picsum.photos/id/1015/1080/1080",
+    "https://picsum.photos/id/1018/1080/1080"
+  ],
+  "slides": [
+    {
+      "title": "First Slide",
+      "subtitle": "This is a test carousel slide with some descriptive text",
+      "textColor": "#FFFFFF"
+    },
+    {
+      "title": "Second Slide",
+      "subtitle": "Another slide to demonstrate multi-slide generation",
+      "textColor": "#FFFFFF"
+    }
+  ],
+  "width": 1080,
+  "height": 1080
+}</textarea>
+        <button onclick="runCustomTest()">Run Custom Test</button>
+    </div>
+
+    <div class="test-section">
+        <h2>Results</h2>
+        <div id="results"></div>
+        <div id="preview" class="preview"></div>
+    </div>
+
+    <script>
+        function log(message, type = 'info') {
+            const results = document.getElementById('results');
+            const timestamp = new Date().toLocaleTimeString();
+            const className = type === 'error' ? 'error' : type === 'success' ? 'success' : 'info';
+            results.innerHTML += `<div class="${className}">[${timestamp}] ${message}</div>`;
+            results.scrollTop = results.scrollHeight;
+        }
+
+        function clearResults() {
+            document.getElementById('results').innerHTML = '';
+            document.getElementById('preview').innerHTML = '';
+        }
+
+        async function makeRequest(endpoint, body) {
+            try {
+                log('Sending request to: ' + endpoint, 'info');
+                log('Request body: ' + JSON.stringify(body, null, 2), 'info');
+
+                const startTime = performance.now();
+
+                const response = await fetch(endpoint, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(body)
+                });
+
+                const endTime = performance.now();
+                const duration = Math.round(endTime - startTime);
+
+                const data = await response.json();
+
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}: ${data.error || 'Unknown error'}`);
+                }
+
+                log(`✅ Request successful (${duration}ms)`, 'success');
+                log('Response: ' + JSON.stringify(data, null, 2), 'success');
+
+                // Display stats
+                if (data.stats) {
+                    log(`📊 Stats: ${data.stats.successful}/${data.stats.totalSlides} slides generated in ${data.stats.generationTimeMs}ms`, 'success');
+                }
+
+                // Display images
+                if (data.images && data.images.length > 0) {
+                    const preview = document.getElementById('preview');
+                    preview.innerHTML = '';
+                    data.images.forEach((img, index) => {
+                        const div = document.createElement('div');
+                        div.innerHTML = `
+                            <img src="${img.base64}" alt="${img.filename}">
+                            <p style="text-align: center; margin-top: 5px;">${img.filename}</p>
+                        `;
+                        preview.appendChild(div);
+                    });
+                }
+
+                return data;
+            } catch (error) {
+                log(`❌ Error: ${error.message}`, 'error');
+                console.error(error);
+                throw error;
+            }
+        }
+
+        async function runTest1() {
+            log('🧪 Running Test 1: Basic Carousel (2 slides, 1080x1080)', 'info');
+            await makeRequest('/.netlify/functions/carousel', {
+                backgrounds: [
+                    'https://picsum.photos/id/1015/1080/1080',
+                    'https://picsum.photos/id/1018/1080/1080'
+                ],
+                slides: [
+                    {
+                        title: 'Welcome to AI Marketing',
+                        subtitle: 'Transform your social media with automated carousel posts that drive engagement',
+                        textColor: '#FFFFFF'
+                    },
+                    {
+                        title: '10x Your Engagement',
+                        subtitle: 'Generate stunning visuals in seconds, not hours, with our free serverless API',
+                        textColor: '#FFFFFF'
+                    }
+                ],
+                width: 1080,
+                height: 1080
+            });
+        }
+
+        async function runTest2() {
+            log('🧪 Running Test 2: Different Dimensions (Instagram Story - 1080x1920)', 'info');
+            await makeRequest('/.netlify/functions/carousel', {
+                backgrounds: [
+                    'https://picsum.photos/1080/1920',
+                    'https://picsum.photos/1080/1920?random=2'
+                ],
+                slides: [
+                    {
+                        title: 'Instagram Stories',
+                        subtitle: 'Perfect for vertical social media content',
+                        textColor: '#FFFFFF'
+                    },
+                    {
+                        title: 'Custom Dimensions',
+                        subtitle: 'Any size from 200x200 to 4000x4000 pixels',
+                        textColor: '#FFFFFF'
+                    }
+                ],
+                width: 1080,
+                height: 1920
+            });
+        }
+
+        async function runTest3() {
+            log('🧪 Running Test 3: Custom Colors', 'info');
+            await makeRequest('/.netlify/functions/carousel', {
+                backgrounds: [
+                    'https://picsum.photos/id/10/1080/1080',
+                    'https://picsum.photos/id/20/1080/1080'
+                ],
+                slides: [
+                    {
+                        title: 'Red Text Example',
+                        subtitle: 'Using custom text colors for brand consistency',
+                        textColor: '#FF0000'
+                    },
+                    {
+                        title: 'Blue Text Example',
+                        subtitle: 'Perfect for matching your brand guidelines',
+                        textColor: '#00BFFF'
+                    }
+                ],
+                width: 1080,
+                height: 1080
+            });
+        }
+
+        async function runCustomTest() {
+            const endpoint = document.getElementById('apiEndpoint').value;
+            const bodyText = document.getElementById('requestBody').value;
+
+            try {
+                const body = JSON.parse(bodyText);
+                log('🧪 Running Custom Test', 'info');
+                await makeRequest(endpoint, body);
+            } catch (error) {
+                log('❌ Invalid JSON in request body', 'error');
+            }
+        }
+
+        // Auto-run Test 1 on load for quick verification
+        window.onload = () => {
+            log('🚀 Page loaded. Click a test button to start.', 'info');
+        };
+    </script>
+</body>
+</html>

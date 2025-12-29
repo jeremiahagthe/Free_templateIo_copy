@@ -1,0 +1,46 @@
+# Dependencies
+node_modules/
+package-lock.json
+yarn.lock
+
+# Environment variables (SENSITIVE - DO NOT COMMIT)
+.env
+.env.local
+.env.production
+.env.development
+
+# Netlify
+.netlify/
+.netlify.toml.backup
+
+# Build outputs
+dist/
+build/
+.cache/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+logs/
+*.log
+npm-debug.log*
+
+# Temporary files
+tmp/
+temp/
+
+# CLAUDE.md - Contains project-specific configuration
+# Keep this local or create a public version without sensitive data
+CLAUDE.md
+
+# Local development files
+.mcp.json

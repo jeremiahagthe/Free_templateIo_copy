@@ -1,0 +1,544 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Carousel Generator - Template.io Alternative</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .header {
+            text-align: center;
+            color: white;
+            margin-bottom: 40px;
+        }
+
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+
+        .header p {
+            font-size: 1.2em;
+            opacity: 0.9;
+        }
+
+        .card {
+            background: white;
+            border-radius: 12px;
+            padding: 30px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            margin-bottom: 30px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            font-weight: 600;
+            margin-bottom: 8px;
+            color: #333;
+        }
+
+        input, textarea {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 16px;
+            transition: border-color 0.3s;
+        }
+
+        input:focus, textarea:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .slide-editor {
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 15px;
+            background: #f9f9f9;
+        }
+
+        .slide-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+
+        .slide-header h3 {
+            color: #667eea;
+        }
+
+        .btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .btn-primary {
+            background: #667eea;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #5568d3;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn-danger {
+            background: #ff4757;
+            color: white;
+        }
+
+        .btn-danger:hover {
+            background: #ee2f3f;
+        }
+
+        .btn-secondary {
+            background: #f1f2f6;
+            color: #333;
+        }
+
+        .btn-secondary:hover {
+            background: #dfe4ea;
+        }
+
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .btn-group {
+            display: flex;
+            gap: 10px;
+            margin-top: 20px;
+        }
+
+        .dimensions {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 40px;
+        }
+
+        .spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #667eea;
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 20px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .results {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 20px;
+        }
+
+        .result-item {
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 15px;
+            background: white;
+        }
+
+        .result-item img {
+            width: 100%;
+            height: auto;
+            border-radius: 4px;
+            margin-bottom: 10px;
+        }
+
+        .result-actions {
+            display: flex;
+            gap: 10px;
+        }
+
+        .result-actions button {
+            flex: 1;
+        }
+
+        .alert {
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+
+        .alert-success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+
+        .alert-error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .stat-card {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 8px;
+            text-align: center;
+        }
+
+        .stat-value {
+            font-size: 2em;
+            font-weight: bold;
+            color: #667eea;
+        }
+
+        .stat-label {
+            color: #666;
+            margin-top: 5px;
+        }
+
+        .color-input-group {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+
+        .color-input-group input[type="color"] {
+            width: 60px;
+            height: 45px;
+            border: none;
+            cursor: pointer;
+        }
+
+        .info-box {
+            background: #e7f3ff;
+            border-left: 4px solid #2196F3;
+            padding: 15px;
+            margin-bottom: 20px;
+            border-radius: 4px;
+        }
+
+        .info-box h4 {
+            color: #1976D2;
+            margin-bottom: 8px;
+        }
+
+        .info-box p {
+            color: #555;
+            line-height: 1.6;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🎨 Carousel Generator</h1>
+            <p>Free Template.io Alternative - Generate Beautiful Social Media Carousels</p>
+        </div>
+
+        <div class="card">
+            <div class="info-box">
+                <h4>📖 Quick Guide</h4>
+                <p>
+                    1. Add background image URLs (Google Drive, Unsplash, etc.)<br>
+                    2. Add slides with title and subtitle for each background<br>
+                    3. Set custom dimensions (default: 1080x1080 for Instagram/Facebook)<br>
+                    4. Generate and download your carousel images!
+                </p>
+            </div>
+
+            <div class="form-group dimensions">
+                <div>
+                    <label>Width (px)</label>
+                    <input type="number" id="width" value="1080" min="200" max="4000">
+                </div>
+                <div>
+                    <label>Height (px)</label>
+                    <input type="number" id="height" value="1080" min="200" max="4000">
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label>Background Image URLs (one per line)</label>
+                <textarea id="backgrounds" rows="5" placeholder="https://picsum.photos/1080/1080&#10;https://images.unsplash.com/photo-1..."></textarea>
+                <small style="color: #666;">Google Drive links: use https://drive.google.com/uc?id=FILE_ID format</small>
+            </div>
+
+            <div class="form-group">
+                <label>Slides</label>
+                <div id="slides-container"></div>
+                <button type="button" class="btn btn-secondary" onclick="addSlide()">+ Add Slide</button>
+            </div>
+
+            <div class="btn-group">
+                <button type="button" class="btn btn-primary" onclick="generateCarousel()" id="generateBtn">
+                    🚀 Generate Carousel
+                </button>
+                <button type="button" class="btn btn-secondary" onclick="loadSampleData()">
+                    📝 Load Sample Data
+                </button>
+            </div>
+        </div>
+
+        <div id="loading" style="display: none;" class="card loading">
+            <div class="spinner"></div>
+            <p>Generating carousel slides...</p>
+        </div>
+
+        <div id="results-container" style="display: none;"></div>
+    </div>
+
+    <script>
+        let slideCount = 0;
+
+        function addSlide(title = '', subtitle = '', textColor = '#FFFFFF') {
+            slideCount++;
+            const container = document.getElementById('slides-container');
+            const slideDiv = document.createElement('div');
+            slideDiv.className = 'slide-editor';
+            slideDiv.id = `slide-${slideCount}`;
+            slideDiv.innerHTML = `
+                <div class="slide-header">
+                    <h3>Slide ${slideCount}</h3>
+                    <button type="button" class="btn btn-danger" onclick="removeSlide(${slideCount})">Remove</button>
+                </div>
+                <div class="form-group">
+                    <label>Title</label>
+                    <input type="text" class="slide-title" value="${title}" placeholder="Enter slide title...">
+                </div>
+                <div class="form-group">
+                    <label>Subtitle</label>
+                    <textarea class="slide-subtitle" rows="2" placeholder="Enter slide subtitle (20-30 words)...">${subtitle}</textarea>
+                </div>
+                <div class="form-group">
+                    <label>Text Color</label>
+                    <div class="color-input-group">
+                        <input type="color" class="slide-color" value="${textColor}">
+                        <input type="text" class="slide-color-text" value="${textColor}" placeholder="#FFFFFF">
+                    </div>
+                </div>
+            `;
+            container.appendChild(slideDiv);
+
+            // Sync color picker and text input
+            const colorPicker = slideDiv.querySelector('.slide-color');
+            const colorText = slideDiv.querySelector('.slide-color-text');
+            colorPicker.addEventListener('input', (e) => colorText.value = e.target.value);
+            colorText.addEventListener('input', (e) => {
+                if (/^#[0-9A-F]{6}$/i.test(e.target.value)) {
+                    colorPicker.value = e.target.value;
+                }
+            });
+        }
+
+        function removeSlide(id) {
+            const slide = document.getElementById(`slide-${id}`);
+            if (slide) slide.remove();
+        }
+
+        function getSlidesData() {
+            const slides = [];
+            document.querySelectorAll('.slide-editor').forEach(slideDiv => {
+                slides.push({
+                    title: slideDiv.querySelector('.slide-title').value,
+                    subtitle: slideDiv.querySelector('.slide-subtitle').value,
+                    textColor: slideDiv.querySelector('.slide-color').value
+                });
+            });
+            return slides;
+        }
+
+        function loadSampleData() {
+            document.getElementById('backgrounds').value =
+                'https://picsum.photos/id/1015/1080/1080\nhttps://picsum.photos/id/1018/1080/1080';
+
+            // Clear existing slides
+            document.getElementById('slides-container').innerHTML = '';
+            slideCount = 0;
+
+            // Add sample slides
+            addSlide('Welcome to AI Marketing', 'Transform your social media with automated carousel posts', '#FFFFFF');
+            addSlide('10x Your Engagement', 'Generate stunning visuals in seconds, not hours', '#FFFFFF');
+        }
+
+        async function generateCarousel() {
+            const backgroundsText = document.getElementById('backgrounds').value.trim();
+            const backgrounds = backgroundsText.split('\n').map(s => s.trim()).filter(s => s);
+            const slides = getSlidesData();
+            const width = parseInt(document.getElementById('width').value);
+            const height = parseInt(document.getElementById('height').value);
+
+            // Validation
+            if (backgrounds.length === 0) {
+                alert('Please add at least one background URL');
+                return;
+            }
+
+            if (slides.length === 0) {
+                alert('Please add at least one slide');
+                return;
+            }
+
+            if (backgrounds.length !== slides.length) {
+                alert(`Number of backgrounds (${backgrounds.length}) must match number of slides (${slides.length})`);
+                return;
+            }
+
+            // Show loading
+            document.getElementById('loading').style.display = 'block';
+            document.getElementById('results-container').style.display = 'none';
+            document.getElementById('generateBtn').disabled = true;
+
+            try {
+                const response = await fetch('/.netlify/functions/carousel', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        backgrounds,
+                        slides,
+                        width,
+                        height
+                    })
+                });
+
+                const data = await response.json();
+
+                if (!response.ok) {
+                    throw new Error(data.error || 'Failed to generate carousel');
+                }
+
+                displayResults(data);
+            } catch (error) {
+                alert('Error: ' + error.message);
+            } finally {
+                document.getElementById('loading').style.display = 'none';
+                document.getElementById('generateBtn').disabled = false;
+            }
+        }
+
+        function displayResults(data) {
+            const container = document.getElementById('results-container');
+            container.style.display = 'block';
+
+            let html = '<div class="card">';
+
+            if (data.success) {
+                html += '<div class="alert alert-success">✅ Carousel generated successfully!</div>';
+            }
+
+            // Stats
+            if (data.stats) {
+                html += '<div class="stats">';
+                html += `<div class="stat-card">
+                    <div class="stat-value">${data.stats.successful}</div>
+                    <div class="stat-label">Slides Generated</div>
+                </div>`;
+                html += `<div class="stat-card">
+                    <div class="stat-value">${data.stats.generationTimeMs}ms</div>
+                    <div class="stat-label">Generation Time</div>
+                </div>`;
+                html += `<div class="stat-card">
+                    <div class="stat-value">${data.stats.dimensions.width}x${data.stats.dimensions.height}</div>
+                    <div class="stat-label">Dimensions</div>
+                </div>`;
+                html += '</div>';
+            }
+
+            // Failed slides
+            if (data.failed && data.failed.length > 0) {
+                html += '<div class="alert alert-error">';
+                html += `⚠️ Failed to generate ${data.failed.length} slide(s):<br>`;
+                data.failed.forEach(f => {
+                    html += `${f.filename}: ${f.error}<br>`;
+                });
+                html += '</div>';
+            }
+
+            // Results grid
+            html += '<div class="results">';
+            data.images.forEach((image, index) => {
+                html += `
+                    <div class="result-item">
+                        <img src="${image.base64}" alt="${image.filename}">
+                        <div class="result-actions">
+                            <button class="btn btn-primary" onclick="downloadImage('${image.base64}', '${image.filename}')">
+                                ⬇️ Download
+                            </button>
+                            <button class="btn btn-secondary" onclick="copyBase64('${image.base64}')">
+                                📋 Copy Base64
+                            </button>
+                        </div>
+                    </div>
+                `;
+            });
+            html += '</div>';
+
+            html += '</div>';
+            container.innerHTML = html;
+        }
+
+        function downloadImage(base64, filename) {
+            const link = document.createElement('a');
+            link.href = base64;
+            link.download = filename;
+            link.click();
+        }
+
+        function copyBase64(base64) {
+            navigator.clipboard.writeText(base64).then(() => {
+                alert('Base64 copied to clipboard!');
+            });
+        }
+
+        // Initialize with one empty slide
+        window.onload = () => {
+            addSlide();
+        };
+    </script>
+</body>
+</html>
