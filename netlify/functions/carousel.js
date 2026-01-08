@@ -100,12 +100,34 @@ async function downloadImage(url, maxRedirects = 10, redirectCount = 0) {
 
 /**
  * Create text overlay SVG with title and subtitle
+ * Supports text wrapping and custom positioning
  */
-function createTextSVG({ title, subtitle, textColor = '#FFFFFF', width, height, fontFamily = 'Arial' }) {
-  const titleSize = Math.floor(width * 0.055); // ~60pt for 1080px
-  const subtitleSize = Math.floor(width * 0.033); // ~36pt for 1080px
+function createTextSVG({ 
+  title, 
+  subtitle, 
+  textColor = '#FFFFFF', 
+  width, 
+  height, 
+  fontFamily = 'Arial',
+  titleSize = null,
+  subtitleSize = null,
+  titleX = null,
+  titleY = null,
+  subtitleX = null,
+  subtitleY = null,
+  maxTitleWidth = null,
+  maxSubtitleWidth = null,
+  textAlign = 'center'
+}) {
+  // Calculate default sizes if not provided
+  const calculatedTitleSize = titleSize || Math.floor(width * 0.055); // ~60pt for 1080px
+  const calculatedSubtitleSize = subtitleSize || Math.floor(width * 0.033); // ~36pt for 1080px
   const padding = Math.floor(width * 0.05);
-  const maxTextWidth = width - (padding * 2);
+  const defaultMaxTextWidth = width - (padding * 2);
+  
+  // Use provided max widths or calculate defaults
+  const titleMaxWidth = maxTitleWidth || defaultMaxTextWidth;
+  const subtitleMaxWidth = maxSubtitleWidth || defaultMaxTextWidth;
 
   // Check if we have any text to render
   const hasTitle = title && title.trim().length > 0;
@@ -116,18 +138,28 @@ function createTextSVG({ title, subtitle, textColor = '#FFFFFF', width, height, 
     return Buffer.from(`<svg width="${width}" height="${height}"></svg>`);
   }
 
-  // Calculate vertical positioning
-  let titleY = height / 2;
-  let subtitleY = height / 2;
+  // Calculate vertical positioning (use provided or calculate)
+  let finalTitleY = titleY;
+  let finalSubtitleY = subtitleY;
   
-  if (hasTitle && hasSubtitle) {
-    titleY = height / 2 - subtitleSize;
-    subtitleY = height / 2 + titleSize;
-  } else if (hasTitle) {
-    titleY = height / 2;
-  } else if (hasSubtitle) {
-    subtitleY = height / 2;
+  if (finalTitleY === null || finalTitleY === undefined) {
+    finalTitleY = height / 2;
+    if (hasTitle && hasSubtitle) {
+      finalTitleY = height / 2 - calculatedSubtitleSize;
+    }
   }
+  
+  if (finalSubtitleY === null || finalSubtitleY === undefined) {
+    finalSubtitleY = height / 2;
+    if (hasTitle && hasSubtitle) {
+      finalSubtitleY = height / 2 + calculatedTitleSize;
+    }
+  }
+
+  // Calculate horizontal positioning
+  const titleXPos = titleX !== null && titleX !== undefined ? titleX : width / 2;
+  const subtitleXPos = subtitleX !== null && subtitleX !== undefined ? subtitleX : width / 2;
+  const textAnchor = textAlign === 'left' ? 'start' : textAlign === 'right' ? 'end' : 'middle';
 
   // Map font names to font-family CSS strings
   const fontFamilyMap = {
@@ -145,57 +177,51 @@ function createTextSVG({ title, subtitle, textColor = '#FFFFFF', width, height, 
 
   const fontFamilyCSS = fontFamilyMap[fontFamily] || fontFamilyMap['Arial'];
 
-  // Note: Sharp doesn't fetch external resources, so only system fonts will work
-  // Google Fonts (Roboto, Montserrat, etc.) will fall back to Arial
-  // To use custom fonts, they must be embedded as base64 data URIs
-
-  // Create SVG with text
+  // Create SVG with text (using foreignObject for proper text wrapping)
   const svg = `
-    <svg width="${width}" height="${height}" xmlns="http://www.w3.org/2000/svg">
+    <svg width="${width}" height="${height}" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
       <defs>
         <filter id="shadow">
           <feDropShadow dx="2" dy="2" stdDeviation="4" flood-opacity="0.5"/>
         </filter>
-        <style>
-          .title {
-            font-family: ${fontFamilyCSS};
-            font-size: ${titleSize}px;
-            font-weight: bold;
-            fill: ${textColor};
-            stroke: rgba(0,0,0,0.3);
-            stroke-width: 2;
-            paint-order: stroke fill;
-            filter: url(#shadow);
-          }
-          .subtitle {
-            font-family: ${fontFamilyCSS};
-            font-size: ${subtitleSize}px;
-            font-weight: normal;
-            fill: ${textColor};
-            stroke: rgba(0,0,0,0.2);
-            stroke-width: 1;
-            paint-order: stroke fill;
-            filter: url(#shadow);
-          }
-        </style>
       </defs>
 
       ${hasTitle ? `
-      <!-- Title -->
-      <text x="${width/2}" y="${titleY}"
-            text-anchor="middle"
-            class="title">
-        ${escapeXml(title)}
-      </text>
+      <!-- Title with wrapping -->
+      <foreignObject x="${titleXPos - titleMaxWidth/2}" y="${finalTitleY - calculatedTitleSize}" width="${titleMaxWidth}" height="${calculatedTitleSize * 3}" style="overflow: visible;">
+        <div xmlns="http://www.w3.org/1999/xhtml" style="
+          font-family: ${fontFamilyCSS};
+          font-size: ${calculatedTitleSize}px;
+          font-weight: bold;
+          color: ${textColor};
+          text-align: ${textAlign};
+          text-shadow: 2px 2px 4px rgba(0,0,0,0.5), 0 0 2px rgba(0,0,0,0.3);
+          line-height: 1.2;
+          word-wrap: break-word;
+          overflow-wrap: break-word;
+          -webkit-text-stroke: 1px rgba(0,0,0,0.3);
+          -webkit-text-fill-color: ${textColor};
+        ">${escapeXml(title)}</div>
+      </foreignObject>
       ` : ''}
 
       ${hasSubtitle ? `
-      <!-- Subtitle -->
-      <text x="${width/2}" y="${subtitleY}"
-            text-anchor="middle"
-            class="subtitle">
-        ${escapeXml(subtitle)}
-      </text>
+      <!-- Subtitle with wrapping -->
+      <foreignObject x="${subtitleXPos - subtitleMaxWidth/2}" y="${finalSubtitleY - calculatedSubtitleSize/2}" width="${subtitleMaxWidth}" height="${calculatedSubtitleSize * 4}" style="overflow: visible;">
+        <div xmlns="http://www.w3.org/1999/xhtml" style="
+          font-family: ${fontFamilyCSS};
+          font-size: ${calculatedSubtitleSize}px;
+          font-weight: normal;
+          color: ${textColor};
+          text-align: ${textAlign};
+          text-shadow: 2px 2px 4px rgba(0,0,0,0.5), 0 0 1px rgba(0,0,0,0.2);
+          line-height: 1.3;
+          word-wrap: break-word;
+          overflow-wrap: break-word;
+          -webkit-text-stroke: 0.5px rgba(0,0,0,0.2);
+          -webkit-text-fill-color: ${textColor};
+        ">${escapeXml(subtitle)}</div>
+      </foreignObject>
       ` : ''}
     </svg>
   `;
@@ -242,14 +268,23 @@ async function generateSlide({ background, slide, width, height, index }) {
     
     let finalImage;
     if (hasText) {
-      // Create text overlay
+      // Create text overlay with custom parameters support
       const textSVG = createTextSVG({
         title: slide.title || '',
         subtitle: slide.subtitle || '',
         textColor: slide.textColor || '#FFFFFF',
         fontFamily: slide.fontFamily || 'Arial',
         width,
-        height
+        height,
+        titleSize: slide.titleSize,
+        subtitleSize: slide.subtitleSize,
+        titleX: slide.titleX,
+        titleY: slide.titleY,
+        subtitleX: slide.subtitleX,
+        subtitleY: slide.subtitleY,
+        maxTitleWidth: slide.maxTitleWidth,
+        maxSubtitleWidth: slide.maxSubtitleWidth,
+        textAlign: slide.textAlign || 'center'
       });
 
       // Composite text over background

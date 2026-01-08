@@ -122,10 +122,26 @@ Each slide object in the `slides` array:
 | `subtitle` | `string` | ✅ | - | Supporting text below title |
 | `textColor` | `string` | ❌ | `#FFFFFF` | Hex color code for text |
 | `fontFamily` | `string` | ❌ | `Arial` | Font name (system fonts only) |
+| `titleSize` | `number` | ❌ | Auto-calculated | Title font size in pixels |
+| `subtitleSize` | `number` | ❌ | Auto-calculated | Subtitle font size in pixels |
+| `titleX` | `number` | ❌ | Center | Title X position (horizontal) |
+| `titleY` | `number` | ❌ | Center | Title Y position (vertical) |
+| `subtitleX` | `number` | ❌ | Center | Subtitle X position (horizontal) |
+| `subtitleY` | `number` | ❌ | Center | Subtitle Y position (vertical) |
+| `maxTitleWidth` | `number` | ❌ | Width - 10% | Maximum title width in pixels (prevents overflow) |
+| `maxSubtitleWidth` | `number` | ❌ | Width - 10% | Maximum subtitle width in pixels (prevents overflow) |
+| `textAlign` | `string` | ❌ | `center` | Text alignment: `left`, `center`, or `right` |
 
 **Supported Fonts:**
 - System fonts: `Arial`, `Helvetica`, `Impact`, `Futura`, `Georgia`, `Times`
 - Google Fonts: `Roboto`, `Open Sans`, `Montserrat`, `Bebas Neue` (fallback to Arial in serverless)
+
+**Font Recommendations for Black & White Images:**
+- **Impact** - Bold, high contrast, dramatic (best for emotional/moody images)
+- **Futura** - Clean, modern, readable
+- **Helvetica** - Professional, safe choice
+- **Georgia** - Elegant serif, good for emotional content
+- **Arial Black** - Very bold, maximum contrast
 
 ### Optional Parameters
 

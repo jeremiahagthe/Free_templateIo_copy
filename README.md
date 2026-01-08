@@ -201,13 +201,17 @@ Custom dimensions: Min 200x200, Max 4000x4000
 
 ## 🎨 Text Styling
 
-The API automatically applies professional text styling:
+The API automatically applies professional text styling with automatic text wrapping:
 
-- **Title:** ~60pt bold font
-- **Subtitle:** ~36pt regular font
+- **Title:** ~60pt bold font (customizable via `titleSize`)
+- **Subtitle:** ~36pt regular font (customizable via `subtitleSize`)
 - **Effects:** White text with dark stroke + shadow for readability
-- **Responsive:** Font sizes scale with image dimensions
-- **Safe Area:** Text limited to 20% of image area
+- **Text Wrapping:** Automatically wraps long text to prevent overflow
+- **Custom Positioning:** Control exact X/Y positions with `titleX`, `titleY`, `subtitleX`, `subtitleY`
+- **Width Control:** Set `maxTitleWidth` and `maxSubtitleWidth` to control text boundaries
+- **Text Alignment:** Choose `left`, `center`, or `right` alignment
+- **Responsive:** Font sizes scale with image dimensions (or use custom sizes)
+- **Safe Area:** Text limited to 20% of image area by default (customizable)
 - **Font Selection:** Choose from popular fonts (Arial, Helvetica, Impact, Futura, Georgia, Times, etc.)
 - **⚠️ Font Limitation:** Only system fonts (Arial, Helvetica, Impact, Futura, Georgia, Times) work reliably in serverless environments. Google Fonts (Roboto, Montserrat, Bebas Neue, Open Sans) will fall back to Arial unless fonts are embedded as base64 data URIs.
 
@@ -275,6 +279,16 @@ To use Google Drive images as carousel backgrounds:
 | `slides[].title` | string | ✅ | Slide title |
 | `slides[].subtitle` | string | ✅ | Slide subtitle |
 | `slides[].textColor` | string | ❌ | Hex color (default: #FFFFFF) |
+| `slides[].fontFamily` | string | ❌ | Font name (default: Arial) |
+| `slides[].titleSize` | number | ❌ | Title font size in px (auto-calculated if not provided) |
+| `slides[].subtitleSize` | number | ❌ | Subtitle font size in px (auto-calculated if not provided) |
+| `slides[].titleX` | number | ❌ | Title X position (default: center) |
+| `slides[].titleY` | number | ❌ | Title Y position (default: center) |
+| `slides[].subtitleX` | number | ❌ | Subtitle X position (default: center) |
+| `slides[].subtitleY` | number | ❌ | Subtitle Y position (default: center) |
+| `slides[].maxTitleWidth` | number | ❌ | Max title width in px (default: width - 10% padding) |
+| `slides[].maxSubtitleWidth` | number | ❌ | Max subtitle width in px (default: width - 10% padding) |
+| `slides[].textAlign` | string | ❌ | Text alignment: 'left', 'center', 'right' (default: 'center') |
 | `width` | number | ❌ | Image width (default: 1080) |
 | `height` | number | ❌ | Image height (default: 1080) |
 | `uploadToDrive` | boolean | ❌ | Upload to Google Drive |
