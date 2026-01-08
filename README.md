@@ -230,9 +230,12 @@ Upload generated carousel images directly to Google Drive:
   "slides": [...],
   "uploadToDrive": true,
   "driveToken": "ya29.a0AfH6SMB...",
-  "driveFolderId": "1a2b3c4d5e6f"
+  "driveFolderId": "1a2b3c4d5e6f",
+  "returnUrls": true
 }
 ```
+
+**Note:** Setting `returnUrls: true` returns Drive URLs instead of base64 data, which significantly reduces response payload size (useful for large carousels).
 
 3. **Response includes Drive URLs:**
 
@@ -277,6 +280,7 @@ To use Google Drive images as carousel backgrounds:
 | `uploadToDrive` | boolean | ❌ | Upload to Google Drive |
 | `driveToken` | string | ❌ | Google OAuth token |
 | `driveFolderId` | string | ❌ | Drive folder ID |
+| `returnUrls` | boolean | ❌ | Return Drive URLs instead of base64 (reduces payload size) |
 
 #### Response
 
@@ -315,6 +319,7 @@ To use Google Drive images as carousel backgrounds:
 | Status | Error | Description |
 |--------|-------|-------------|
 | 400 | Invalid request | Missing required fields |
+| 413 | Payload too large | Response exceeds 6MB limit (use `returnUrls: true` with Drive upload) |
 | 429 | Rate limit exceeded | Max 10 requests/minute per IP |
 | 500 | Internal error | Server error (check logs) |
 
@@ -324,6 +329,7 @@ To use Google Drive images as carousel backgrounds:
 - ✅ **Timeout:** 10 seconds per request
 - ✅ **Input Validation:** Sanitized text, validated URLs
 - ✅ **Dimension Limits:** 200x200 to 4000x4000 pixels
+- ✅ **Response Size Limit:** 6MB maximum (use `returnUrls: true` for large carousels)
 - ✅ **CORS Enabled:** Works from any domain
 - ✅ **Graceful Failures:** Individual slide errors don't break the entire request
 

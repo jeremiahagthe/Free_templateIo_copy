@@ -382,7 +382,8 @@ exports.handler = async (event, context) => {
       height = 1080,
       uploadToDrive: shouldUploadToDrive = false,
       driveToken = null,
-      driveFolderId = null
+      driveFolderId = null,
+      returnUrls = false // If true, return Drive URLs instead of base64 (reduces payload size)
     } = body;
 
     // Validation
@@ -452,6 +453,88 @@ exports.handler = async (event, context) => {
       driveUrls = await Promise.all(uploadPromises);
     }
 
+    // Prepare response images
+    // If returnUrls is true and we have Drive URLs, return minimal image data with URLs
+    // Otherwise, return full base64 data (but check size limit)
+    let responseImages;
+    if (returnUrls && driveUrls.length > 0 && driveUrls.every(url => url.success)) {
+      // Return minimal data with Drive URLs
+      responseImages = successfulSlides.map((slide, index) => ({
+        filename: slide.filename,
+        success: true,
+        driveUrl: driveUrls[index]?.webContentLink || driveUrls[index]?.webViewLink
+      }));
+    } else {
+      // Return full base64 data
+      responseImages = successfulSlides;
+    }
+
+    // Build response
+    const response = {
+      success: true,
+      images: responseImages,
+      failed: failedSlides.length > 0 ? failedSlides : undefined,
+      driveUrls: driveUrls.length > 0 ? driveUrls : undefined,
+      stats: {
+        totalSlides: backgrounds.length,
+        successful: successfulSlides.length,
+        failed: failedSlides.length,
+        generationTimeMs: generationTime,
+        dimensions: { width, height }
+      }
+    };
+
+    // Check response size (Netlify limit is ~6MB)
+    const responseString = JSON.stringify(response);
+    const responseSizeBytes = Buffer.byteLength(responseString, 'utf8');
+    const maxSizeBytes = 6000000; // 6MB limit
+
+    if (responseSizeBytes > maxSizeBytes) {
+      // If response is too large and we have Drive URLs, suggest using returnUrls
+      if (driveUrls.length > 0) {
+        return {
+          statusCode: 413,
+          headers: {
+            'Content-Type': 'application/json',
+            'Access-Control-Allow-Origin': '*'
+          },
+          body: JSON.stringify({
+            success: false,
+            error: `Response payload too large (${Math.round(responseSizeBytes / 1024 / 1024 * 100) / 100}MB). Maximum allowed: 6MB.`,
+            suggestion: 'Set "returnUrls": true in your request to return Drive URLs instead of base64 data, or reduce the number of slides.',
+            stats: {
+              totalSlides: backgrounds.length,
+              successful: successfulSlides.length,
+              failed: failedSlides.length,
+              generationTimeMs: generationTime,
+              dimensions: { width, height }
+            }
+          })
+        };
+      } else {
+        // No Drive URLs available, suggest reducing slides or enabling Drive upload
+        return {
+          statusCode: 413,
+          headers: {
+            'Content-Type': 'application/json',
+            'Access-Control-Allow-Origin': '*'
+          },
+          body: JSON.stringify({
+            success: false,
+            error: `Response payload too large (${Math.round(responseSizeBytes / 1024 / 1024 * 100) / 100}MB). Maximum allowed: 6MB.`,
+            suggestion: 'Reduce the number of slides, use smaller dimensions, or enable Google Drive upload with "returnUrls": true to get URLs instead of base64 data.',
+            stats: {
+              totalSlides: backgrounds.length,
+              successful: successfulSlides.length,
+              failed: failedSlides.length,
+              generationTimeMs: generationTime,
+              dimensions: { width, height }
+            }
+          })
+        };
+      }
+    }
+
     // Return response
     return {
       statusCode: 200,
@@ -459,19 +542,7 @@ exports.handler = async (event, context) => {
         'Content-Type': 'application/json',
         'Access-Control-Allow-Origin': '*'
       },
-      body: JSON.stringify({
-        success: true,
-        images: successfulSlides,
-        failed: failedSlides.length > 0 ? failedSlides : undefined,
-        driveUrls: driveUrls.length > 0 ? driveUrls : undefined,
-        stats: {
-          totalSlides: backgrounds.length,
-          successful: successfulSlides.length,
-          failed: failedSlides.length,
-          generationTimeMs: generationTime,
-          dimensions: { width, height }
-        }
-      })
+      body: responseString
     };
 
   } catch (error) {

@@ -136,6 +136,7 @@ Each slide object in the `slides` array:
 | `uploadToDrive` | `boolean` | `false` | Enable Google Drive upload |
 | `driveToken` | `string` | - | Google OAuth access token |
 | `driveFolderId` | `string` | - | Google Drive folder ID for uploads |
+| `returnUrls` | `boolean` | `false` | Return Drive URLs instead of base64 (reduces payload size, prevents 413 errors) |
 
 ### Platform-Specific Dimensions
 
@@ -341,7 +342,8 @@ return [{
   "height": {{ $json.fields.Height || 1080 }},
   "uploadToDrive": true,
   "driveToken": "{{ $node['Google Drive OAuth'].json.access_token }}",
-  "driveFolderId": "your-folder-id"
+  "driveFolderId": "your-folder-id",
+  "returnUrls": true
 }
 ```
 
@@ -722,6 +724,58 @@ When using Google Drive upload:
 - Check folder ID is correct and accessible
 - Ensure OAuth scope includes `https://www.googleapis.com/auth/drive.file`
 - Test token with a simple Drive API call first
+
+### Issue: "Response payload size exceeded" (HTTP 413)
+
+**Symptom:** Error message: "Response payload size exceeded maximum allowed payload size (6291556 bytes)"
+
+**Cause:** Netlify functions have a 6MB response limit. Large carousels with many slides or high-resolution images exceed this limit when returning base64 data.
+
+**Solutions:**
+1. **Use `returnUrls: true` with Google Drive upload (Recommended):**
+   ```json
+   {
+     "uploadToDrive": true,
+     "driveToken": "{{ $node['Google Drive OAuth'].json.access_token }}",
+     "driveFolderId": "your-folder-id",
+     "returnUrls": true
+   }
+   ```
+   This returns Drive URLs instead of base64 data, dramatically reducing payload size.
+
+2. **Reduce number of slides:** Generate fewer slides per request (3-5 instead of 10+)
+
+3. **Use smaller dimensions:** Reduce width/height (e.g., 1080x1080 instead of 4000x4000)
+
+4. **Split into batches:** Process carousels in smaller batches using Split in Batches node
+
+**Example with returnUrls:**
+```json
+{
+  "backgrounds": ["https://..."],
+  "slides": [{"title": "...", "subtitle": "..."}],
+  "uploadToDrive": true,
+  "driveToken": "ya29...",
+  "driveFolderId": "folder-id",
+  "returnUrls": true
+}
+```
+
+**Response with returnUrls:**
+```json
+{
+  "success": true,
+  "images": [
+    {
+      "filename": "carousel-slide-1.png",
+      "success": true,
+      "driveUrl": "https://drive.google.com/uc?id=..."
+    }
+  ],
+  "driveUrls": [...],
+  "stats": {...}
+}
+```
 
 ---
 
