@@ -9,29 +9,91 @@ const rateLimitCache = new NodeCache({ stdTTL: 60 });
 const RATE_LIMIT = 10;
 
 /**
- * Download image from URL
+ * Download image from URL with robust redirect handling
+ * Handles HTTP 301, 302, 303, 307, 308 redirects (e.g., Google Drive links)
  */
-async function downloadImage(url) {
+async function downloadImage(url, maxRedirects = 10, redirectCount = 0) {
   return new Promise((resolve, reject) => {
+    // Prevent infinite redirect loops
+    if (redirectCount > maxRedirects) {
+      reject(new Error(`Too many redirects (max ${maxRedirects}). Possible redirect loop.`));
+      return;
+    }
+
     const parsedUrl = new URL(url);
     const protocol = parsedUrl.protocol === 'https:' ? https : http;
 
-    const request = protocol.get(url, { timeout: 5000 }, (response) => {
+    const options = {
+      timeout: 10000, // 10 seconds timeout
+      headers: {
+        'User-Agent': 'Mozilla/5.0 (compatible; CarouselGenerator/1.0)'
+      }
+    };
+
+    const request = protocol.get(url, options, (response) => {
+      // Handle redirect status codes (301, 302, 303, 307, 308)
+      if (response.statusCode >= 300 && response.statusCode < 400 && response.headers.location) {
+        const location = response.headers.location;
+        
+        // Consume response body to free resources
+        response.on('data', () => {});
+        response.on('end', () => {});
+        response.destroy();
+
+        // Handle relative and absolute redirect URLs
+        let redirectUrl;
+        try {
+          redirectUrl = new URL(location, url).href;
+        } catch (e) {
+          reject(new Error(`Invalid redirect URL: ${location}`));
+          return;
+        }
+
+        // Follow the redirect recursively
+        downloadImage(redirectUrl, maxRedirects, redirectCount + 1)
+          .then(resolve)
+          .catch(reject);
+        return;
+      }
+
+      // Only accept 200 status code for final response
       if (response.statusCode !== 200) {
-        reject(new Error(`Failed to download image: HTTP ${response.statusCode}`));
+        reject(new Error(`Failed to download image: HTTP ${response.statusCode} ${response.statusMessage || ''}`));
+        return;
+      }
+
+      // Validate content type (optional, but helps catch errors early)
+      const contentType = response.headers['content-type'];
+      if (contentType && !contentType.startsWith('image/')) {
+        response.destroy();
+        reject(new Error(`Invalid content type: ${contentType}. Expected an image.`));
         return;
       }
 
       const chunks = [];
       response.on('data', (chunk) => chunks.push(chunk));
-      response.on('end', () => resolve(Buffer.concat(chunks)));
+      response.on('end', () => {
+        if (chunks.length === 0) {
+          reject(new Error('Empty response from image server'));
+          return;
+        }
+        resolve(Buffer.concat(chunks));
+      });
       response.on('error', reject);
     });
 
-    request.on('error', reject);
+    request.on('error', (error) => {
+      reject(new Error(`Network error: ${error.message}`));
+    });
+    
     request.on('timeout', () => {
       request.destroy();
-      reject(new Error('Image download timeout'));
+      reject(new Error(`Image download timeout after ${options.timeout}ms`));
+    });
+
+    // Handle connection errors
+    request.on('aborted', () => {
+      reject(new Error('Image download was aborted'));
     });
   });
 }
